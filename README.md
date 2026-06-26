@@ -74,3 +74,19 @@ Even after acquiring the lock, the service performs a second database query (get
 ### Idempotency Keys (Preventing Double Submissions)
 
 The booking flow is split into two steps: **create** and **confirm**. The create step returns a cryptographic idempotencyKey. The confirm step uses a database transaction with a SELECT ... FOR UPDATE (pessimistic row-level lock) on the idempotency key row. If the key is already marked as inalized, the request is rejected. This guarantees that even if a user double-clicks the confirm button, the booking is only finalized once.
+
+---
+
+## Cross-Cutting Concerns
+
+### Distributed Request Tracing
+
+Every incoming request to the API Gateway is assigned a correlationId (UUID v4) via the ttachCorrelationMiddleware. This ID is stored in Node.js AsyncLocalStorage and forwarded as an x-correlation-id header to every downstream service. When the BookingService enqueues an email job into BullMQ, the correlationId is embedded in the job payload. The NotificationService worker extracts it and re-mounts it into its own AsyncLocalStorage context, ensuring that every log line across every service for a single user action shares the same trace ID.
+
+### Fail-Fast Environment Validation
+
+All four services validate their environment variables at startup using Zod schemas. If a required variable (like JWT_SECRET, DATABASE_URL, or MAILER_PASS) is missing or malformed, the process exits immediately with a descriptive error rather than failing unpredictably at runtime.
+
+### Standardized Error Handling
+
+All services use a shared pattern of custom error classes (BadRequestError, NotFoundError, UnauthorizedError, ConflictError, InternalServerError) that extend a base AppError class. A centralized genericErrorHandler middleware at the bottom of each Express stack catches these errors and returns consistent JSON responses with appropriate HTTP status codes.
