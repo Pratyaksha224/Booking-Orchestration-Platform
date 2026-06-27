@@ -90,3 +90,21 @@ All four services validate their environment variables at startup using Zod sche
 ### Standardized Error Handling
 
 All services use a shared pattern of custom error classes (BadRequestError, NotFoundError, UnauthorizedError, ConflictError, InternalServerError) that extend a base AppError class. A centralized genericErrorHandler middleware at the bottom of each Express stack catches these errors and returns consistent JSON responses with appropriate HTTP status codes.
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Language | TypeScript (Node.js) |
+| HTTP Framework | Express.js |
+| ORM | Sequelize (User, Property), Prisma (Booking) |
+| Database | MySQL |
+| Cache / Queue | Redis |
+| Distributed Lock | Redlock |
+| Message Queue | BullMQ |
+| Validation | Zod |
+| Auth | JWT (jsonwebtoken) + bcrypt |
+| Logging | Winston (daily rotate) |
+| API Docs | Swagger (OpenAPI 3.0) |
